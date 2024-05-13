@@ -8,7 +8,8 @@ Usuage:
 #include "MCP.h"
 
 
-int main(int argc, char *argv[]) {
+int main (int argc, char *argv[]) 
+{
     FILE *output_stream;
     int flags, opt;        
     char *filename;

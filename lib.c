@@ -4,6 +4,7 @@
 #include <errno.h>
 #include "MCP.h"
 
+
 void readfile (char *path)
 {
     FILE *stream;           // Stream of the input batch file.
