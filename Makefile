@@ -15,4 +15,4 @@ lib.o : lib.c
 	gcc -o lib.o -c lib.c
 
 clean :
-	rm part[0-9] part[0-9].o
+	rm part[0-9] *.o
