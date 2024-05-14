@@ -70,7 +70,7 @@ void addcmdline (queue *q, char *buf)
         command = parseline(tokenbuffer->argv[i], " ");
         enqueue(q, (void*) command);
     }
-    free(tokenbuffer);
+    freecmd(tokenbuffer);
 }
 
 
