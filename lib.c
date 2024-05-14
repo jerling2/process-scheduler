@@ -7,21 +7,29 @@
 #include "MCP.h"
 
 
+/**
+ * @brief Create a queue that contains all the commands in a file.
+ *
+ * This function reads commands from a file stream. Each line of a file stream
+ * can contain multiple commands. Each command is encapuslated in a cmd
+ * structure and enqueued to a result queue.
+ * 
+ * @param[in] path Pointer to a filename.
+ * @return queue Pointer to a queue containing cmd structures, or Null if
+ * the path could not be opened.
+ */
 queue *readfile (char *path)
 {
-    FILE *stream;           
-    char *line;            
-    size_t len;            
-    ssize_t nread;
-    queue *q;
+    FILE *stream;         // The file Stream that this function reads from.
+    char *line = NULL;    // The line read from a file stream.
+    size_t len = 0;       // (Use internally by getline)
+    ssize_t nread;        // Number of Bytes read from a file stream.
+    queue *q;             // Pointer to the resulting queue.
 
     if ((stream = fopen(path, "r")) == NULL) {                    // Open file.
-        fprintf(stderr, "Error cannot open %s: %s\n",
-            path, strerror(errno));
+        fprintf(stderr, "Error cannot open %s: %s\n", path, strerror(errno));
         return NULL;
     }
-    line = NULL;
-    len = 0;
     q = newqueue();
     while ((nread = getline(&line, &len, stream)) != -1) {        // Read file.
         addcmdline(q, line);                                      
@@ -35,14 +43,26 @@ queue *readfile (char *path)
 }   /* readfile */
 
 
+/**
+ * @brief Enqueue commands from a line buffer into the input queue.
+ * 
+ * This function splits a line buffer into large tokens, then creates cmd
+ * structures from each large token, and enqueues each cmd structure into the 
+ * input queue.
+ * 
+ * @param[in,out] queue Pointer where the cmds structures are enqueued to.
+ * @param[in] buf Pointer to a line buffer containing commands.
+ */
 void addcmdline (queue *q, char *buf)
 {
-    cmd *tokenbuffer;
-    int i;
+    cmd *tokenbuffer;    // Temporary buffer for storing whole commands.
+    cmd *command;        // Command structure that is enqueued to the queue.
+    int i;               // The ith command in the tokenbuffer.
 
     tokenbuffer = parseline(buf, ";");
     for (i = 0; tokenbuffer->argv[i] != NULL; i++) {
-        enqueue(q, (void*) parseline(tokenbuffer->argv[i], " "));
+        command = parseline(tokenbuffer->argv[i], " ");
+        enqueue(q, (void*) command);
     }
     free(tokenbuffer);
 }
