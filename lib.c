@@ -147,13 +147,18 @@ int numtok (char *buf, const char *delim)
 }   /* numtok */
 
 
+/**
+ * @brief Deallocate a cmd structure.
+ * 
+ * This function releases all the memory reserved by a command structure.
+ * 
+ * @param[in] command Pointer to be deallocated.
+*/
 void freecmd (cmd *command)
 {
     int i;    // The ith argument in command's argv.
 
-    i = 0;
-
-    for (; i < command->size; i++) {
+    for (i = 0; i < command->size; i++) {
         free(command->argv[i]);
     }
     free(command->path);
