@@ -13,4 +13,6 @@ typedef struct cmd {
 
 void readfile (char *path);
 
+cmd parseline (char *line);
+
 #endif
