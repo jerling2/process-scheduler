@@ -12,10 +12,12 @@ typedef struct node {
     void *data;
 } node;
 
+typedef void (*freefun)(void*);
+
 void enqueue(queue *q, void *data);
 
 void* dequeue(queue *q);
 
-void freequeue(queue *q);
+void freequeue(queue *q, freefun fun);
 
 #endif // QUEUE_H
