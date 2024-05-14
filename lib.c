@@ -67,6 +67,7 @@ void addcmdline (queue *q, char *buf)
     free(tokenbuffer);
 }
 
+
 /**
  * @brief Create a cmd structure from a input line buffer.
  * 
