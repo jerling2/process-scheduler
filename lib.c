@@ -81,25 +81,25 @@ cmd *parseline (char *line, const char *delim)
 {
     cmd *command;     // Cmd structure to contain the processed input line.
     char *linedup;    // Duplicate string to preserve the original line.
-	char *saveptr;    // (Use internally by strtok_r)
-	char *token;      // Pointer to a token returned by strtok_r.
+    char *saveptr;    // (Use internally by strtok_r)
+    char *token;      // Pointer to a token returned by strtok_r.
     int i;            // The ith token in the line.
 
-	i = 0;
+    i = 0;
     linedup = strdup(line);
     /* Initialize the command structure */
     command = (cmd*)malloc(sizeof(cmd));
     command->size = numtok(linedup, delim);
-	command->argv = (char**)malloc(sizeof(char*)*command->size);
+    command->argv = (char**)malloc(sizeof(char*)*command->size);
     /* Extract tokens from the line */
     token = strtok_r(linedup, delim, &saveptr);         // Get the first token.
     command->path = strdup(token);
-	while (token != NULL) {     
+    while (token != NULL) {     
         command->argv[i] = strdup(token);
-		token = strtok_r(NULL, delim, &saveptr);         // Get the next token.
-		i ++;
-	}
-	command->argv[i] = NULL;             // Last argument in argv must be null.
+        token = strtok_r(NULL, delim, &saveptr);         // Get the next token.
+        i ++;
+    }
+    command->argv[i] = NULL;             // Last argument in argv must be null.
     free(linedup);
     return command;
 }   /* parseline */
@@ -108,33 +108,33 @@ cmd *parseline (char *line, const char *delim)
 int numtok (char *buf, const char *delim)
 {
     int tok;      // Number of tokens.
-	int state;    // The current state of the algorithm.
-	int i;        // The ith char in the buf.
+    int state;    // The current state of the algorithm.
+    int i;        // The ith char in the buf.
 
-	tok = 1;                   //< Start at 1 to make space for the null token.
-	state = 0;
-	i = 0;
+    tok = 1;                   //< Start at 1 to make space for the null token.
+    state = 0;
+    i = 0;
     
     /* Strip newline character (if any) */
     strtok (buf, "\n"); 
     
     /* Skip all leading delimiters */
     while (buf[i] == delim[0]) {
-		i ++;
+        i ++;
     }	
     
     /* Increment tokens only when moving from state 0 to 1 */
-	for (; buf[i] != '\0'; i++) {
+    for (; buf[i] != '\0'; i++) {
         /* State 0: Skip all delimiters */
-		if (state == 0 && buf[i] != delim[0]) {
-			state = 1;
-			tok ++;                                       //< Increment tokens.
-		}
-        /* State 1: Skip all non-delimiters */
-		if (state == 1 && buf[i] == delim[0]) {
-			state = 0;
+        if (state == 0 && buf[i] != delim[0]) {
+            state = 1;
+            tok ++;                                       //< Increment tokens.
         }
-	}
+        /* State 1: Skip all non-delimiters */
+        if (state == 1 && buf[i] == delim[0]) {
+            state = 0;
+        }
+    }
     return tok;
 }   /* numtok */
 
