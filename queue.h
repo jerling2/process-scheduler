@@ -8,7 +8,7 @@ typedef struct queue {
 } queue;
 
 typedef struct node {
-    void *next;
+    node *next;
     void *data;
 } node;
 
@@ -16,7 +16,7 @@ typedef void (*freefun)(void*);
 
 void enqueue(queue *q, void *data);
 
-void* dequeue(queue *q);
+node *dequeue(queue *q);
 
 void freequeue(queue *q, freefun fun);
 
