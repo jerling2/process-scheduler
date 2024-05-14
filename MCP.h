@@ -12,11 +12,33 @@ typedef struct cmd {
     int size;
 } cmd;
 
-cmd *readfile (char *path);
+typedef struct queue {
+    struct node *head;
+    struct node *tail;
+    int size;
+} queue;
+
+typedef struct node {
+    struct node *next;
+    struct node *prev;
+    void *data;
+} node;
+
+typedef void (*freefun)(void*);
+
+queue *newqueue();
+
+void enqueue(queue *q, void *data);
+
+void *dequeue(queue *q);
+
+void freequeue(queue *q, freefun fun);
+
+queue *readfile (char *path);
 
 int numtok (char *buf, const char *delim);
 
-cmd parseline (char *line, const char *delim);
+cmd *parseline (char *line, const char *delim);
 
 void freecmd (cmd *command);
 

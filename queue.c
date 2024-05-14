@@ -1,8 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "queue.h"
 #include "MCP.h"
 
+
+queue *newqueue()
+{
+    queue *q;
+    q = (queue*)malloc(sizeof(queue));
+    q->head = NULL;
+    q->tail = NULL;
+    q->size = 0;
+    return q;
+}
 
 void enqueue(queue *q, void *data)
 {

@@ -3,28 +3,24 @@
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
+#include <libgen.h>
 #include "MCP.h"
 
 
-cmd *readfile (char *path)
+queue *readfile (char *path)
 {
     FILE *stream;           // Stream of the input batch file.
-    char *line;         // Line buffer for storing a line from the stream.
+    char *line;             // Line buffer for storing a line from the stream.
     size_t len;             // Length of the line buffer.
     ssize_t nread;          // # Bytes read from stdin.
-    cmd *cmdlist;
-    cmd bigbuf;
-    cmd smallbuf;
-    int currentsize;
-    int maxsize;
+    cmd *bigbuf;
+    queue *q;
+    int i;
 
     line = NULL;
-    currentsize = 0;
-    maxsize = 16;
-    cmdlist = (cmd*) malloc(sizeof(cmd)*maxsize);
-
-
     len = 0;
+    q = newqueue();
+    i = 0;
 
     /* Open the stream */
     if ((stream = fopen(path, "r")) == NULL) {
@@ -44,29 +40,23 @@ cmd *readfile (char *path)
         }
 
         bigbuf = parseline(line, ";");
-        if (bigbuf.size + currentsize + 1 > maxsize) {
-            maxsize = maxsize * 2;
-            cmdlist = (cmd*) realloc(cmdlist, sizeof(cmd)*maxsize);
+        for (i = 0; bigbuf->argv[i] != NULL; i++) {
+            enqueue(q, (void*) parseline(bigbuf->argv[i], " "));
         }
-
-        for (int i = 0; bigbuf.argv[i] != NULL; i++) {
-            smallbuf = parseline(bigbuf.argv[i], " ");
-            cmdlist[currentsize] = smallbuf;
-            currentsize++;
-        }
+        freecmd(bigbuf);
     }
     
     cleanup:
     /* Free resources and close the input stream. */
     fclose(stream);
     free(line);
-    return cmdlist;
+    return q;
 }   /* readfile */
 
 
-cmd parseline (char *line, const char *delim)
+cmd *parseline (char *line, const char *delim)
 {
-    cmd command;  // A struct for containing a tokenized array of command args.
+    cmd *command;  // A struct for containing a tokenized array of command args.
     char *linedup;    // duplicate of the line to preserve original line.
 	char *saveptr;    // strtok_r requirement.
 	char *token;      // A pointer to a token in the line.
@@ -74,22 +64,23 @@ cmd parseline (char *line, const char *delim)
 
 	i = 0;
     linedup = strdup(line);
-
+    command = (cmd*)malloc(sizeof(cmd));
 
     /* Allocate space for command argv */
-    command.size = numtok(linedup, delim);
-	command.argv = (char**)malloc(sizeof(char*)*command.size);
+    command->size = numtok(linedup, delim);
+	command->argv = (char**)malloc(sizeof(char*)*command->size);
 
     /* Fill command argv with tokens */
 	token = strtok_r(linedup, delim, &saveptr);
+    command->path = strdup(token);
 	while (token != NULL) {         //< strtok returns null when it's finished.
-		command.argv[i] = strdup(token);         //< Dup str to make a new ptr.
+        command->argv[i] = strdup(token);
 		token = strtok_r(NULL, delim, &saveptr);        //< Get the next token.
 		i ++;
 	}
 
     /* The last token in argv must be null */
-	command.argv[i] = NULL;
+	command->argv[i] = NULL;
     free(linedup);
     return command;
 }   /* parseline */
@@ -138,6 +129,7 @@ void freecmd (cmd *command)
     for (; i < command->size; i++) {
         free(command->argv[i]);
     }
+    free(command->path);
     free(command->argv);
     free(command);
 }   /* freecmd */
