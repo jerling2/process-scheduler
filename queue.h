@@ -9,6 +9,7 @@ typedef struct queue {
 
 typedef struct node {
     struct node *next;
+    struct node *prev;
     void *data;
 } node;
 
