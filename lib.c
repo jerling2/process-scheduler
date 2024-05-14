@@ -67,34 +67,39 @@ void addcmdline (queue *q, char *buf)
     free(tokenbuffer);
 }
 
-
+/**
+ * @brief Create a cmd structure from a input line buffer.
+ * 
+ * This function uses strtok_r to create a cmd structure that contains tokens
+ * from an input line buffer. The input line buffer will not be altered.
+ * 
+ * @param[in] line Pointer to a buffer.
+ * @param[in] delimiter to split the line buffer into tokens.
+ * @return cmd structure containing tokens parsed from the line buffer.
+*/
 cmd *parseline (char *line, const char *delim)
 {
-    cmd *command;  // A struct for containing a tokenized array of command args.
-    char *linedup;    // duplicate of the line to preserve original line.
-	char *saveptr;    // strtok_r requirement.
-	char *token;      // A pointer to a token in the line.
+    cmd *command;     // Cmd structure to contain the processed input line.
+    char *linedup;    // Duplicate string to preserve the original line.
+	char *saveptr;    // (Use internally by strtok_r)
+	char *token;      // Pointer to a token returned by strtok_r.
     int i;            // The ith token in the line.
 
 	i = 0;
     linedup = strdup(line);
+    /* Initialize the command structure */
     command = (cmd*)malloc(sizeof(cmd));
-
-    /* Allocate space for command argv */
     command->size = numtok(linedup, delim);
 	command->argv = (char**)malloc(sizeof(char*)*command->size);
-
-    /* Fill command argv with tokens */
-	token = strtok_r(linedup, delim, &saveptr);
+    /* Extract tokens from the line */
+    token = strtok_r(linedup, delim, &saveptr);         // Get the first token.
     command->path = strdup(token);
-	while (token != NULL) {         //< strtok returns null when it's finished.
+	while (token != NULL) {     
         command->argv[i] = strdup(token);
-		token = strtok_r(NULL, delim, &saveptr);        //< Get the next token.
+		token = strtok_r(NULL, delim, &saveptr);         // Get the next token.
 		i ++;
 	}
-
-    /* The last token in argv must be null */
-	command->argv[i] = NULL;
+	command->argv[i] = NULL;             // Last argument in argv must be null.
     free(linedup);
     return command;
 }   /* parseline */
