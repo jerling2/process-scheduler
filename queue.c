@@ -83,14 +83,14 @@ void *dequeue(queue *q)
     }
     head = q->head;
     data = head->data;
-    if (q->size == 1) {                              // Edge case: size 1 queue.
+    if (q->size == 1) {                             // Edge case: size 1 queue.
         q->head = NULL;
         q->tail = NULL;
         q->size --;
         free(head);
         return data;
     }
-    new = head->next;                                      // Default case.
+    new = head->next;                                          // Default case.
     new->prev = NULL;
     q->head = new;
     q->size --;
