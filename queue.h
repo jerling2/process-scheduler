@@ -17,7 +17,7 @@ typedef void (*freefun)(void*);
 
 void enqueue(queue *q, void *data);
 
-node *dequeue(queue *q);
+void *dequeue(queue *q);
 
 void freequeue(queue *q, freefun fun);
 
