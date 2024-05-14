@@ -20,7 +20,6 @@ int main (int argc, char *argv[])
     }
         
     filename = argv[1];
-
     readfile(filename);
     exit(EXIT_SUCCESS);
 }

@@ -1,14 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "queue.h"
+#include "MCP.h"
 
-/*
-typedef struct queue {
-    void *head;
-    void *tail;
-    int size;
-} queue;
-*/
 
 void enqueue(queue *q, void *data)
 {
@@ -71,11 +65,12 @@ void *dequeue(queue *q)
     return data;
 }
 
+
 void freequeue(queue *q, freefun fun)
 {
-    node *n;
+    void *n;
     while ((n = dequeue(q)) != NULL) {
-        fun(n->data);
+        fun(n);
     }
     free(q);
 }

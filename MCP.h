@@ -12,7 +12,7 @@ typedef struct cmd {
     int size;
 } cmd;
 
-void readfile (char *path);
+cmd *readfile (char *path);
 
 int numtok (char *buf, const char *delim);
 
@@ -20,6 +20,4 @@ cmd parseline (char *line, const char *delim);
 
 void freecmd (cmd *command);
 
-
-
-#endif
+#endif 

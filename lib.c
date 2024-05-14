@@ -6,7 +6,7 @@
 #include "MCP.h"
 
 
-void readfile (char *path)
+cmd *readfile (char *path)
 {
     FILE *stream;           // Stream of the input batch file.
     char *line;         // Line buffer for storing a line from the stream.
@@ -29,7 +29,7 @@ void readfile (char *path)
     /* Open the stream */
     if ((stream = fopen(path, "r")) == NULL) {
         fprintf(stderr, "Error cannot open %s: %s\n", path, strerror(errno));
-        return;                         // Error! Could not read from filename.
+        goto cleanup;                   // Error! Could not read from filename.
     }
 
     /* Execute each line of commands from the stream. */
@@ -51,12 +51,12 @@ void readfile (char *path)
 
         for (int i = 0; bigbuf.argv[i] != NULL; i++) {
             smallbuf = parseline(bigbuf.argv[i], " ");
-            // printf("(%d, %d, %d) ", i, currentsize, i + currentsize);
             cmdlist[currentsize] = smallbuf;
             currentsize++;
         }
     }
     
+    cleanup:
     /* Free resources and close the input stream. */
     fclose(stream);
     free(line);
@@ -114,7 +114,7 @@ int numtok (char *buf, const char *delim)
     }	
     
     /* Increment tokens only when moving from state 0 to 1 */
-	for (i; buf[i] != '\0'; i++) {
+	for (; buf[i] != '\0'; i++) {
         /* State 0: Skip all delimiters */
 		if (state == 0 && buf[i] != delim[0]) {
 			state = 1;
@@ -132,12 +132,12 @@ int numtok (char *buf, const char *delim)
 void freecmd (cmd *command)
 {
     int i;    // The ith argument in command's argv.
-    
+
     i = 0;
 
-    for (i; i < command->size; i++) {
+    for (; i < command->size; i++) {
         free(command->argv[i]);
     }
-
+    free(command->argv);
     free(command);
 }   /* freecmd */
