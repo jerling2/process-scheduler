@@ -44,14 +44,14 @@ void *dequeue(queue *q)
     node *new;
     void *data;
     
-    /* Grab the head*/
-    head = q->head;
-    data = head->data;
-
     /* Edge case: empty queue */
     if (q->size == 0) {
         return NULL;
     }
+
+    /* Grab the head*/
+    head = q->head;
+    data = head->data;
 
     /* Edge case: size 1 queue */
     if (q->size == 1) {
