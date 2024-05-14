@@ -36,6 +36,8 @@ void freequeue(queue *q, freefun fun);
 
 queue *readfile (char *path);
 
+void addcmdline (queue *q, char *buf);
+
 int numtok (char *buf, const char *delim);
 
 cmd *parseline (char *line, const char *delim);

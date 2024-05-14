@@ -9,49 +9,43 @@
 
 queue *readfile (char *path)
 {
-    FILE *stream;           // Stream of the input batch file.
-    char *line;             // Line buffer for storing a line from the stream.
-    size_t len;             // Length of the line buffer.
-    ssize_t nread;          // # Bytes read from stdin.
-    cmd *bigbuf;
+    FILE *stream;           
+    char *line;            
+    size_t len;            
+    ssize_t nread;
     queue *q;
-    int i;
 
+    if ((stream = fopen(path, "r")) == NULL) {                    // Open file.
+        fprintf(stderr, "Error cannot open %s: %s\n",
+            path, strerror(errno));
+        return NULL;
+    }
     line = NULL;
     len = 0;
     q = newqueue();
-    i = 0;
-
-    /* Open the stream */
-    if ((stream = fopen(path, "r")) == NULL) {
-        fprintf(stderr, "Error cannot open %s: %s\n", path, strerror(errno));
-        goto cleanup;                   // Error! Could not read from filename.
+    while ((nread = getline(&line, &len, stream)) != -1) {        // Read file.
+        addcmdline(q, line);                                      
     }
-
-    /* Execute each line of commands from the stream. */
-    while (1) {
-        if ((nread = getline(&line, &len, stream)) == -1) {                             
-            break;                                              // Reached EOF.
-        }
-
-        if (errno != 0) {
-            fprintf(stderr, "Error reading %s: %s\n", path, strerror(errno));         
-            break;                        // Encounted some error in getline().
-        }
-
-        bigbuf = parseline(line, ";");
-        for (i = 0; bigbuf->argv[i] != NULL; i++) {
-            enqueue(q, (void*) parseline(bigbuf->argv[i], " "));
-        }
-        freecmd(bigbuf);
+    if (errno != 0) {              
+        fprintf(stderr, "Error when reading %s: %s\n", path, strerror(errno));
     }
-    
-    cleanup:
-    /* Free resources and close the input stream. */
-    fclose(stream);
+    fclose(stream);                                       // Release resources.
     free(line);
     return q;
 }   /* readfile */
+
+
+void addcmdline (queue *q, char *buf)
+{
+    cmd *tokenbuffer;
+    int i;
+
+    tokenbuffer = parseline(buf, ";");
+    for (i = 0; tokenbuffer->argv[i] != NULL; i++) {
+        enqueue(q, (void*) parseline(tokenbuffer->argv[i], " "));
+    }
+    free(tokenbuffer);
+}
 
 
 cmd *parseline (char *line, const char *delim)

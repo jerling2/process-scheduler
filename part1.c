@@ -40,10 +40,10 @@ int main (int argc, char *argv[])
         i++;
     }
     
-    cmd *temp = (cmd*)dequeue(q);
+    cmd *temp = (cmd *)dequeue(q);
     printf("Dequeued Node: path=%s, size=%d\n", temp->path, temp->size);
     freecmd(temp);
 
-    freequeue(q, freecmd);
+    freequeue(q, (void *)freecmd);
     exit(EXIT_SUCCESS);
 }
