@@ -9,6 +9,7 @@ Brief : MCP Version 1.0
 typedef struct cmd {
     const char *path;
     char *const argv;
+    int size;
 } cmd;
 
 void readfile (char *path);
