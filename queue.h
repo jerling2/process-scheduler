@@ -2,8 +2,8 @@
 #define QUEUE_H
 
 typedef struct queue {
-    void *head;
-    void *tail;
+    struct node *head;
+    struct node *tail;
     int size;
 } queue;
 
