@@ -5,45 +5,73 @@ Usuage:
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include "MCP.h"
+
+
+pid_t *createpool (queue *cmdqueue)
+{
+    cmd *command;
+    pid_t *proclist;
+    pid_t pid;
+    int numprocs;
+    int i;
+
+    numprocs = cmdqueue->size;
+    proclist = (pid_t *)malloc(sizeof(pid_t)*numprocs);
+    for (i = 0; i < numprocs; i++)
+    {
+        command = (cmd *)dequeue(cmdqueue);
+        if ((pid = fork()) == -1) {
+            freecmd(command);
+            return NULL;
+        }
+        if (pid > 0) {
+            proclist[i] = pid;
+            fprintf(stderr, "Created process %d : %d\n", i, pid);
+            freecmd(command);
+            continue;
+        }
+        if (execvp(command->path, command->argv) == -1) {
+            perror("execvp"); // handle error
+            freecmd(command);
+            free(proclist);
+            return NULL;
+        }
+    }
+    fprintf(stderr, "Parent leaving create pool\n");
+    return proclist;
+}
 
 
 int main (int argc, char *argv[]) 
 {
-    FILE *output_stream;
-    int flags, opt;        
-    char *filename;
-    queue *q;
-    node *n;
-    
+    FILE *output_stream;    
+    queue *cmdqueue;
+    pid_t *proclist;
+
+
     if (argc != 2) {
         fprintf(stderr, "Error: incorrect usage. Try %s <filename>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
         
-    filename = argv[1];
-    q = readfile(filename);
-    
-    /* Testing readfile */
-    n = q->head;
-    int i = 0;
-    int k;
-    while (n != NULL) {
-        printf("Node %d:\n", i);
-        cmd temp = *(cmd*)n->data;
-        printf("\tpath=\"%s\"\n\targv={%s", temp.path, temp.argv[0]);
-        for (k = 1; ((cmd*)n->data)->argv[k] != NULL; k++) {
-            printf(", %s", ((cmd*)n->data)->argv[k]);
-        }
-        printf("}\n");
-        n = n->next;
-        i++;
+    cmdqueue = readfile(argv[1]);
+    int size = cmdqueue->size;
+    if ((proclist = createpool(cmdqueue)) == NULL) {
+        freequeue(cmdqueue, (void *)freecmd);
+        exit(EXIT_SUCCESS);
+    }
+
+    int i;
+    for (i = 0; i < size; i++)
+    {
+        pid_t child = wait(NULL);
+        printf("Child %d terminated\n", child);
     }
     
-    cmd *temp = (cmd *)dequeue(q);
-    printf("Dequeued Node: path=%s, size=%d\n", temp->path, temp->size);
-    freecmd(temp);
-
-    freequeue(q, (void *)freecmd);
+    freequeue(cmdqueue, (void *)freecmd);
+    free(proclist);
     exit(EXIT_SUCCESS);
 }
