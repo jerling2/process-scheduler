@@ -1,3 +1,9 @@
+/*
+Joseph Erlinger (jerling2@uoregon.edu)
+
+This file contains functions for parsing data from a file stream into a queue
+that contains cmd structures for each command within the file stream.
+*/
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
