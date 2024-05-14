@@ -1,3 +1,10 @@
+/*
+Joseph Erlinger (jerling2@uoregon.edu)
+
+This file contains a queue datastructure where each node within the queue
+encapsulates generic data. A user interacting with the queue does not need to
+interact with the node structure.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include "MCP.h"
