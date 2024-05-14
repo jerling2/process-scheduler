@@ -7,8 +7,8 @@ Brief : MCP Version 1.0
 #define MCP_H
 
 typedef struct cmd {
-    const char *path;
-    char *const *argv;
+    char *path;
+    char **argv;
     int size;
 } cmd;
 
