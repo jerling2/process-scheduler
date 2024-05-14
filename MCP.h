@@ -15,4 +15,6 @@ void readfile (char *path);
 
 cmd parseline (char *line);
 
+void freecmd (cmd command);
+
 #endif
