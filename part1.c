@@ -10,6 +10,7 @@ its own subprocess.
 #include <sys/wait.h>
 #include "MCP.h"
 #include "color.h"
+#include "terminal.h"
 
 
 /**
@@ -93,6 +94,8 @@ int main (int argc, char *argv[])
         terminateMsg(child);
     }
 
+    Terminal test = whichterm();
+    printf("terminal = %d\n", test);
     // TODO: integrate
     // const char *gnome_command = "gnome-terminal -- 'top'";
     // int ret = system(gnome_command);
