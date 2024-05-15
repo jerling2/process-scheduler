@@ -9,6 +9,7 @@ its own subprocess.
 #include <unistd.h>
 #include <sys/wait.h>
 #include "MCP.h"
+#include "terminal.h"
 
 
 /**
@@ -49,7 +50,7 @@ pid_t *createpool (queue *cmdqueue, int numprocs)
         if (pid > 0) {                                             // MCP Logic.
             proclist[i] = pid;
             freecmd(command);
-            printf("Created child #%d : pid=%d\n", i, pid);
+            createMsg(pid);
             continue;
         }
         if (execvp(command->path, command->argv) == -1) {  // Subprocess logic.
@@ -89,8 +90,13 @@ int main (int argc, char *argv[])
     }
     for (i = 0; i < numprocs; i++) {
         pid_t child = wait(NULL);     // Wait for each child process to finish.
-        printf("Child %d terminated\n", child);
+        terminateMsg(child);
     }
+
+    // TODO: integrate
+    // const char *gnome_command = "gnome-terminal -- 'top'";
+    // int ret = system(gnome_command);
+    // printf("%d\n", ret);
 
     cleanup:
     freequeue(cmdqueue, (void *)freecmd);
