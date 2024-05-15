@@ -9,7 +9,7 @@ its own subprocess.
 #include <unistd.h>
 #include <sys/wait.h>
 #include "MCP.h"
-#include "terminal.h"
+#include "color.h"
 
 
 /**
