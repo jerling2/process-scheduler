@@ -96,10 +96,7 @@ int main (int argc, char *argv[])
 
     Terminal test = whichterm();
     printf("terminal = %d\n", test);
-    // TODO: integrate
-    // const char *gnome_command = "gnome-terminal -- 'top'";
-    // int ret = system(gnome_command);
-    // printf("%d\n", ret);
+    displayprocs(test);
 
     cleanup:
     freequeue(cmdqueue, (void *)freecmd);

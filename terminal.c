@@ -3,10 +3,12 @@
 #include <unistd.h>
 #include "terminal.h"
 
+
 char terminals[SUPPORTED_TERMS][25] = {
     XFCE4, 
     GNOME
 };
+
 
 Terminal whichterm ()
 {
@@ -18,4 +20,11 @@ Terminal whichterm ()
         }
     }
     return -1;
+}
+
+
+void displayprocs (Terminal type)
+{
+    char *argv[] = {terminals[type], "--command='top -p1'", NULL};
+    execv(terminals[type], argv);
 }
