@@ -98,9 +98,12 @@ cmd *parseline (char *line, const char *delim)
     command = (cmd*)malloc(sizeof(cmd));
     command->size = numtok(linedup, delim);
     command->argv = (char**)malloc(sizeof(char*)*command->size);
+    command->path = NULL;
     /* Extract tokens from the line */
     token = strtok_r(linedup, delim, &saveptr);         // Get the first token.
-    command->path = strdup(token);
+    if (token != NULL) {
+        command->path = strdup(token);
+    }
     while (token != NULL) {     
         command->argv[i] = strdup(token);
         token = strtok_r(NULL, delim, &saveptr);         // Get the next token.

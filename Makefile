@@ -3,7 +3,13 @@
 # Brief :
 # Usuage: 
 
-all : part1
+all : part1 iobound cpubound
+
+cpubound : cpubound.c
+	gcc -o cpubound cpubound.c
+
+iobound : iobound.c
+	gcc -o iobound iobound.c
 
 test_queue : test_queue.o queue.o parser.o
 	gcc -o test_queue -g test_queue.o queue.o parser.o
@@ -22,8 +28,6 @@ parser.o : parser.c
 
 queue.o : queue.c
 	gcc -o queue.o -c -g -Wall queue.c
-
-
 
 clean :
 	rm part[0-9] *.o

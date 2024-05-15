@@ -9,6 +9,7 @@ interact with the node structure.
 #include <stdlib.h>
 #include "MCP.h"
 
+
 /** 
  * @brief Create an empty queue. 
  *
@@ -111,6 +112,10 @@ void *dequeue(queue *q)
  */
 void freequeue(queue *q, freefun freemem)
 {
+    if (q == NULL) {
+        return;
+    }
+
     void *data;    // Data of a dequeued node.
 
     while ((data = dequeue(q)) != NULL) {
