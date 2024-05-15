@@ -96,8 +96,9 @@ int main (int argc, char *argv[])
 
     Terminal test = whichterm();
     printf("terminal = %d\n", test);
-    displayprocs(test);
-
+    createtopscript(proclist, numprocs);
+    displayprocs(test); // Changes address space.
+    
     cleanup:
     freequeue(cmdqueue, (void *)freecmd);
     free(proclist);

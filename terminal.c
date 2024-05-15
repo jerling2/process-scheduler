@@ -28,3 +28,16 @@ void displayprocs (Terminal type)
     char *argv[] = {terminals[type], "--command=top -p1", NULL};
     execv(terminals[type], argv);
 }
+
+void createtopscript (pid_t *proclist, int numprocs)
+{
+    FILE *fp;
+    int i;
+
+    fp = fopen(TOPSCRIPT, "w+");
+    fprintf(fp, "top");
+    for (i=0; i<numprocs; i++) {
+        fprintf(fp, " -p%d", proclist[i]);
+    }
+    fclose(fp);
+}

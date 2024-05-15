@@ -1,4 +1,5 @@
 #pragma once
+#include <unistd.h>
 
 typedef enum Terminal {
     XFCE4,
@@ -9,6 +10,7 @@ typedef enum Terminal {
 #define XFCE4 "/usr/bin/xfce4-terminal"
 #define GNOME "/usr/bin/gnome-terminal"
 #define SUPPORTED_TERMS 2
+#define TOPSCRIPT "./topscript.sh"
 
 extern char terminals[SUPPORTED_TERMS][25];
 
@@ -17,3 +19,5 @@ extern char terminals[SUPPORTED_TERMS][25];
 Terminal whichterm ();
 
 void displayprocs (Terminal terminal);
+
+void createtopscript (pid_t *proclist, int numprocs);
