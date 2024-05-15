@@ -25,6 +25,6 @@ Terminal whichterm ()
 
 void displayprocs (Terminal type)
 {
-    char *argv[] = {terminals[type], "--command='top -p1'", NULL};
+    char *argv[] = {terminals[type], "--command=top -p1", NULL};
     execv(terminals[type], argv);
 }
