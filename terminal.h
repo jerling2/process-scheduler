@@ -7,8 +7,10 @@ typedef enum Terminal {
     NOTERM = -1
 } Terminal;
 
-#define XFCE4 "/usr/bin/xfce4-terminal"
-#define GNOME "/usr/bin/gnome-terminal"
+#define XFCE4_PATH "/usr/bin/xfce4-terminal"
+#define GNOME_PATH "/usr/bin/gnome-terminal"
+#define XFCE4_COMMAND "--command=./topscript.sh"
+#define GNOME_COMMAND "--command=./topscript.sh"
 #define SUPPORTED_TERMS 2
 #define TOPSCRIPT "./topscript.sh"
 

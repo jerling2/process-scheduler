@@ -7,8 +7,8 @@
 
 
 char terminals[SUPPORTED_TERMS][25] = {
-    XFCE4, 
-    GNOME
+    XFCE4_PATH, 
+    GNOME_PATH,
 };
 
 
@@ -28,6 +28,7 @@ Terminal whichterm ()
 void displayprocs (Terminal type)
 {
     pid_t pid;
+    char *argv[] = {terminals[type], NULL, NULL, NULL};
     if ((pid = fork()) == -1) {                            
         perror("fork");
         return;
@@ -35,7 +36,15 @@ void displayprocs (Terminal type)
     if (pid > 0) {                                            
         return;
     }
-    char *argv[] = {terminals[type], "--command=./topscript.sh", NULL};
+    switch (type) {
+    case XFCE4:
+        argv[1] = XFCE4_COMMAND;
+        break;
+    case GNOME:
+        argv[1] = "--";
+        argv[2] = GNOME_COMMAND;
+        break; 
+    }
     execv(terminals[type], argv);
 }
 
