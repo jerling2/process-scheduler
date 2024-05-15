@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "terminal.h"
 
 
@@ -25,7 +27,15 @@ Terminal whichterm ()
 
 void displayprocs (Terminal type)
 {
-    char *argv[] = {terminals[type], "--command=top -p1", NULL};
+    pid_t pid;
+    if ((pid = fork()) == -1) {                            
+        perror("fork");
+        return;
+    }
+    if (pid > 0) {                                            
+        return;
+    }
+    char *argv[] = {terminals[type], "--command=./topscript.sh", NULL};
     execv(terminals[type], argv);
 }
 
@@ -35,9 +45,10 @@ void createtopscript (pid_t *proclist, int numprocs)
     int i;
 
     fp = fopen(TOPSCRIPT, "w+");
-    fprintf(fp, "top");
+    fprintf(fp, "top -d0.1");
     for (i=0; i<numprocs; i++) {
         fprintf(fp, " -p%d", proclist[i]);
     }
+    chmod(TOPSCRIPT, S_IRWXU);
     fclose(fp);
 }
