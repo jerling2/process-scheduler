@@ -43,28 +43,26 @@ pid_t *createpool (queue *cmdqueue, int *numprocs)
             freecmd(command);
             continue;
         }
-        if ((pid = fork()) == -1) {                             // Fork process.
-            perror("fork");
-            goto error;                                    // Handle fork error.
+        if ((pid = fork()) == -1) {                            // Fork process.
+            criticalMsg("createpool: MCP unable to fork() process.");
+            continue;                         // We don't want the MCP to exit.
         }
-        if (pid > 0) {                                             // MCP Logic.
+        if (pid > 0) {                                            // MCP Logic.
             proclist[*numprocs] = pid;
             (*numprocs)++;
             freecmd(command);
             createMsg(pid);
             continue;
         }
-        if (execvp(command->path, command->argv) == -1) {  // Subprocess logic.
+        if (execvp(command->path, command->argv) == -1) {       // Child logic.
+            fprintf(stderr, "Could not execute '%s'. ", command->path);
             perror("execvp");
-            goto error;
+            freecmd(command);
+            free(proclist);
+            return NULL;
         }
     }
     return proclist;
-
-    error:
-    freecmd(command);
-    free(proclist);
-    return NULL;
 }
 
 
@@ -86,7 +84,7 @@ int main (int argc, char *argv[])
         goto cleanup;                            // Error: Could not read file.
     }
     if ((proclist = createpool(cmdqueue, &numprocs)) == NULL) {
-        goto cleanup;              // Error (most likely from a child process).
+        goto cleanup;      // Child process needs to be cleaned and terminated.
     }
     if (displayprocs(proclist, numprocs) == -1) {
         goto cleanup;      // Child process needs to be cleaned and terminated.

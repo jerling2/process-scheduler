@@ -16,8 +16,6 @@ typedef enum Terminal {
 
 extern char terminals[SUPPORTED_TERMS][25];
 
-
-
 Terminal whichterm ();
 
 int displayprocs (pid_t *proclist, int numprocs);

@@ -6,14 +6,12 @@
 #pragma once
 #include <stdio.h>
 
-
 enum Colors {
     RESET_COLOR,
     RED = 31,
     YELLOW = 33,
     CYAN = 36
 };
-
 
 static inline void setBoldColor (int code)
 {
@@ -25,13 +23,10 @@ static inline void setColor (int code)
     printf("\033[%dm", code);
 }
 
-
-
 static inline void resetColor ()
 {
     printf("\033[0m");
 }
-
 
 static inline void createMsg (int pid)
 {
@@ -40,7 +35,6 @@ static inline void createMsg (int pid)
     resetColor();
     fflush(stdout);
 }
-
 
 static inline void terminateMsg (int pid)
 {
