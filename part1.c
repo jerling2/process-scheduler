@@ -8,6 +8,7 @@ its own subprocess.
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include "MCP.h"
 #include "color.h"
 #include "terminal.h"
@@ -87,15 +88,14 @@ int main (int argc, char *argv[])
     if ((proclist = createpool(cmdqueue, &numprocs)) == NULL) {
         goto cleanup;              // Error (most likely from a child process).
     }
-    Terminal test = whichterm();
-    printf("terminal = %d\n", test);
-    createtopscript(proclist, numprocs);
-    displayprocs(test); // Changes address space.
+    if (displayprocs(proclist, numprocs) == -1) {
+        goto cleanup;      // Child process needs to be cleaned and terminated.
+    }
     for (i = 0; i < numprocs; i++) {
         pid_t child = wait(NULL);     // Wait for each child process to finish.
         terminateMsg(child);
     }
-    
+
     cleanup:
     freequeue(cmdqueue, (void *)freecmd);
     free(proclist);

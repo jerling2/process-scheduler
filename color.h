@@ -9,15 +9,22 @@
 
 enum Colors {
     RESET_COLOR,
+    RED = 31,
     YELLOW = 33,
-    CYAN = 36,
+    CYAN = 36
 };
 
 
-static inline void setColor (int code)
+static inline void setBoldColor (int code)
 {
     printf("\033[%d;1m", code);
 }
+
+static inline void setColor (int code)
+{
+    printf("\033[%dm", code);
+}
+
 
 
 static inline void resetColor ()
@@ -28,7 +35,7 @@ static inline void resetColor ()
 
 static inline void createMsg (int pid)
 {
-    setColor(CYAN);
+    setBoldColor(CYAN);
     printf("Child created pid=%d\n", pid);
     resetColor();
     fflush(stdout);
@@ -37,8 +44,24 @@ static inline void createMsg (int pid)
 
 static inline void terminateMsg (int pid)
 {
-    setColor(YELLOW);
+    setBoldColor(YELLOW);
     printf("Child terminated pid=%d\n", pid);
+    resetColor();
+    fflush(stdout);
+}
+
+static inline void errorMsg (char *message)
+{
+    setBoldColor(RED);
+    printf("Error: %s\n", message);
+    resetColor();
+    fflush(stdout);
+}
+
+static inline void criticalMsg (char *message)
+{
+    setBoldColor(RED);
+    printf("Critical: %s\n", message);
     resetColor();
     fflush(stdout);
 }
