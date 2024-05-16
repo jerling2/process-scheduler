@@ -10,6 +10,7 @@ enum Colors {
     RESET_COLOR,
     RED = 31,
     YELLOW = 33,
+    MAGENTA = 35,
     CYAN = 36
 };
 
@@ -68,6 +69,17 @@ static inline void criticalMsg (char *message)
 {
     setBoldColor(RED);
     printf("Critical: %s\n", message);
+    resetColor();
+    fflush(stdout);
+}
+
+/**
+ * @brief Print in bold magenta text, "Info: ...".
+ */
+static inline void infoMsg (char *message)
+{
+    setBoldColor(MAGENTA);
+    printf("Info: %s\n", message);
     resetColor();
     fflush(stdout);
 }
