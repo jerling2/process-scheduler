@@ -1,3 +1,18 @@
+/*
+Joseph Erlinger (jerling2@uoregon.edu)
+
+This file opens a new terminal (either xfce4 or gnome) to run the 
+command: 'top -d0.1 -p1 -p2 -p3 ... -pN'. Note: the child process that runs
+exec() performs a complicated launch procedure to launch the new terminal.
+The new terminal instance is not a child of the MCP, resulting in the pid of
+the terminal instance to be lost. The child that ran the exec() command 
+terminates immediately after spawning the new terminal. The new terminal
+must be closed manually by the user.
+
+tldr: this file opens a new terminal, but it cannot automatically close the new
+terminal instance. So the user has to manually close the new terminal window 
+when they are done.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -6,6 +21,7 @@
 #include <sys/wait.h>
 #include "terminal.h"
 #include "color.h"
+
 
 /* List of paths for supported terminals for this system. */
 /* Important: Must be in the same order as enum Terminal. */
