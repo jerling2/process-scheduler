@@ -28,6 +28,9 @@ static inline void resetColor ()
     printf("\033[0m");
 }
 
+/**
+ * @brief Print in bold cyan text, "Child Created pid= ...".
+ */
 static inline void createMsg (int pid)
 {
     setBoldColor(CYAN);
@@ -36,6 +39,9 @@ static inline void createMsg (int pid)
     fflush(stdout);
 }
 
+/**
+ * @brief Print in bold yellow text, "Child terminated pid= ...".
+ */
 static inline void terminateMsg (int pid)
 {
     setBoldColor(YELLOW);
@@ -44,6 +50,9 @@ static inline void terminateMsg (int pid)
     fflush(stdout);
 }
 
+/**
+ * @brief Print in bold red text, "Error: ...".
+ */
 static inline void errorMsg (char *message)
 {
     setBoldColor(RED);
@@ -52,6 +61,9 @@ static inline void errorMsg (char *message)
     fflush(stdout);
 }
 
+/**
+ * @brief Print in bold red text, "Critical: ...".
+ */
 static inline void criticalMsg (char *message)
 {
     setBoldColor(RED);
