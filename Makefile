@@ -18,7 +18,7 @@ test_queue.o : Tests/test_queue.c
 	gcc -o test_queue.o -c -g $^
 
 part2 : part2.o parser.o queue.o terminal.o
-	gcc -o part2 -g part1.o parser.o queue.o terminal.o
+	gcc -o part2 -g part2.o parser.o queue.o terminal.o
 
 part1 : part1.o parser.o queue.o terminal.o
 	gcc -o part1 -g part1.o parser.o queue.o terminal.o
