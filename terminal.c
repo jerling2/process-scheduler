@@ -21,6 +21,7 @@ when they are done.
 #include <sys/wait.h>
 #include "terminal.h"
 #include "color.h"
+#include "MCP.h"
 
 
 /* List of paths for supported terminals for this system. */
@@ -42,12 +43,11 @@ char terminals[SUPPORTED_TERMS][25] = {
  * terminal, then this function returns -1, and the child is cleaned and
  * terminated.
  * 
- * @param[in] proclist that contains the pids of all child processes.
- * @param[in] numprocs equal to the length of proclist.
+ * @param[in] procqueue that contains the pids of all child processes.
  * @return 0 to indiciate MCP is returning, or -1 to indicate that a child
  * process is returning.
  */
-int displayprocs (pid_t *proclist, int numprocs)
+int displayprocs (queue *procqueue)
 {
     Terminal terminal;    // The type of terminal that is supported.
 
@@ -55,7 +55,7 @@ int displayprocs (pid_t *proclist, int numprocs)
         errorMsg("xfce4-terminal or gnome-terminal was not found in /usr/bin/");
         return 0;
     }
-    createtopscript(proclist, numprocs);
+    createtopscript(procqueue);
     if (openterm(terminal) == -1) {
         return -1;             // Child process will be cleaned and terminated.
     }
@@ -92,19 +92,19 @@ Terminal whichterm ()
  * 
  * This function creates a bash file that runs the command 'top -p1 -p2 ...'.
  * 
- * @param[in] proclist that contains the pids of all child processes.
- * @param[in] numprocs equal to the length of proclist.
+ * @param[in] procqueue that contains the pids of all child processes.
  */
-void createtopscript (pid_t *proclist, int numprocs)
+void createtopscript (queue *procqueue)
 {
-    FILE *fp;    // File pointer to the TOPSCRIPT.
-    int i;       // The ith child process in proclist.
+    FILE *fp;              // File pointer to the TOPSCRIPT.
+    pid_t *data;           // The data stored in a node of the procqueue.
+    node *cnode = NULL;    // The current node.
 
     fp = fopen(TOPSCRIPT, "w+");
     fprintf(fp, "#!/bin/bash\n");
     fprintf(fp, "top -d0.1");
-    for (i=0; i<numprocs; i++) {
-        fprintf(fp, " -p%d", proclist[i]);
+    while ((data = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
+        fprintf(fp, " -p%d", *data);
     }
     chmod(TOPSCRIPT, S_IRWXU);
     fclose(fp);

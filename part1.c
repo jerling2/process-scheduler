@@ -22,47 +22,47 @@ its own subprocess.
  * command. Each child process attempts to execute their assigned command. If
  * the child fails, then they release all of their resources and call exit.
  * 
- * @param[in,out] queue Pointer that contains n-commands.
- * @param[in] integer equal to n for n-processes.
- * @return Pointer to an array of child pids.
+ * @param[in,out] cmdqueue that contains n-commands. Note: this queue will be
+ * consumed/emptied by this function.
+ * @return procqueue that contains k-processes.
  */
-pid_t *createpool (queue *cmdqueue, int *numprocs)
+queue *createpool (queue *cmdqueue)
 {
-    cmd *command;       // The command that will be executed by a subprocess.
-    pid_t *proclist;    // List of child pids.
-    pid_t pid;          // The pid output of fork.
-    int numcmds;
-    int i;              // The ith process.
+    queue *procqueue;    // A queue to store processes in.
+    cmd *command;        // The command that will be executed by a subprocess.
+    pid_t *pid;          // The pid output of fork.
+    int numcmds;         // The size of the cmdqueue.
+    int i;               // The ith command.
 
+    procqueue = newqueue();
     numcmds = cmdqueue->size;
-    *numprocs = 0;
-    proclist = (pid_t *)malloc(sizeof(pid_t)*numcmds);
     for (i = 0; i < numcmds; i++) {
+        pid = (pid_t *)malloc(sizeof(pid_t));
         command = (cmd *)dequeue(cmdqueue);
         if (command->path == NULL) {       // Handle poor constructed commands.
             freecmd(command);
             continue;
         }
-        if ((pid = fork()) == -1) {                            // Fork process.
+        if ((*pid = fork()) == -1) {                            // Fork process.
             criticalMsg("createpool: MCP unable to fork() process.");
             continue;                         // We don't want the MCP to exit.
         }
-        if (pid > 0) {                                            // MCP Logic.
-            proclist[*numprocs] = pid;
-            (*numprocs)++;
+        if (*pid > 0) {                                            // MCP Logic.
+            enqueue(procqueue, pid);
             freecmd(command);
-            createMsg(pid);
+            createMsg(*pid);
             continue;
         }
         if (execvp(command->path, command->argv) == -1) {       // Child logic.
             fprintf(stderr, "Could not execute '%s'. ", command->path);
             perror("execvp");
             freecmd(command);
-            free(proclist);
+            free(pid);
+            freequeue(procqueue, free);
             return NULL;
         }
     }
-    return proclist;
+    return procqueue;
 }
 
 
@@ -72,9 +72,9 @@ pid_t *createpool (queue *cmdqueue, int *numprocs)
 int main (int argc, char *argv[]) 
 {
     queue *cmdqueue = NULL;     // Queue of commands.
-    pid_t *proclist = NULL;     // List of child pids.
-    int numprocs = 0;           // Number of child pids.
-    int i;                      // The ith subprocess.
+    queue *procqueue = NULL;    // Queue of running processes.
+    int numchild;               // Number of children.
+    int i;                      // The ith child.
 
     if (argc != 2) {                                       // Input validation.
         fprintf(stderr, "Error: invalid usage. Try %s <filename>\n", argv[0]);
@@ -83,19 +83,20 @@ int main (int argc, char *argv[])
     if ((cmdqueue = readfile(argv[1])) == NULL) {
         goto cleanup;                            // Error: Could not read file.
     }
-    if ((proclist = createpool(cmdqueue, &numprocs)) == NULL) {
+    if ((procqueue = createpool(cmdqueue)) == NULL) {
         goto cleanup;      // Child process needs to be cleaned and terminated.
     }
-    if (displayprocs(proclist, numprocs) == -1) {
+    if (displayprocs(procqueue) == -1) {
         goto cleanup;      // Child process needs to be cleaned and terminated.
     }
-    for (i = 0; i < numprocs; i++) {
+    numchild = procqueue->size;
+    for (i = 0; i < numchild; i++) {
         pid_t child = wait(NULL);     // Wait for each child process to finish.
         terminateMsg(child);
     }
 
     cleanup:
     freequeue(cmdqueue, (void *)freecmd);
-    free(proclist);
+    freequeue(procqueue, free);
     exit(EXIT_SUCCESS);
 }

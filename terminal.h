@@ -1,5 +1,6 @@
 #pragma once
 #include <unistd.h>
+#include "MCP.h"
 
 typedef enum Terminal {
     XFCE4,
@@ -18,10 +19,10 @@ extern char terminals[SUPPORTED_TERMS][25];
 
 Terminal whichterm ();
 
-int displayprocs (pid_t *proclist, int numprocs);
+int displayprocs (queue *procqueue);
 
 int openterm (Terminal type);
 
-void createtopscript (pid_t *proclist, int numprocs);
+void createtopscript (queue *procqueue);
 
 void removetopscript();
