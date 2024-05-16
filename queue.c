@@ -112,12 +112,11 @@ void *dequeue(queue *q)
  */
 void freequeue(queue *q, freefun freemem)
 {
+    void *data;    // Data of a dequeued node.
+
     if (q == NULL) {
         return;
     }
-
-    void *data;    // Data of a dequeued node.
-
     while ((data = dequeue(q)) != NULL) {
         freemem(data); 
     }
@@ -125,6 +124,15 @@ void freequeue(queue *q, freefun freemem)
 }
 
 
+/**
+ * @brief Inorder-traverse a queue.
+ * 
+ * This function traverses a queue inorder by repeating getting the next node.
+ * To start at the begining, call this function with cnode = NULL.
+ * 
+ * @param[in] queue Pointer to be traverse.
+ * @param[in] cnode Pointer to the current node.
+ */
 void *inorder(queue *q, node **cnode)
 {
     if (*cnode == NULL) {
@@ -138,10 +146,19 @@ void *inorder(queue *q, node **cnode)
 }
 
 
+/**
+ * @brief Remove a node based on its data from a queue.
+ * 
+ * This function traverses a queue inorder until it reaches a node that contains
+ * the target data. Then, that node is removed by calling swap and free.
+ * 
+ * @param[in] queue containing the target data.
+ * @param[in] target Pointer used to identify the node to be removed.
+ */
 void rmqueue(queue *q, void *target)
 {
-    node *cnode = NULL;
-    void *data;
+    node *cnode = NULL;    // Pointer to the current node.
+    void *data;            // Pointer to the data stored in the current node.
 
     while ((data = inorder(q, &cnode)) != NULL) {
         if (data == target) {
@@ -153,26 +170,32 @@ void rmqueue(queue *q, void *target)
 }
 
 
+/**
+ * @brief Remove a specific node from the queue.
+ * 
+ * This function makes a target node's predecessor and successor point to each
+ * other instead of pointing to target node. Thereby removing the target node
+ * from the queue. Note: this function does not free any memory.
+ * 
+ * @param[in] queue containing the removed node.
+ * @param[in] node to be removed.
+ */
 void swap(queue *q, node *removed) {
-    node *next;
-    node *prev;
+    node *next;    // The removed node's successor.
+    node *prev;    // The removed node's predecessor.
 
     q->size --;
-
-    next = removed->next;
+    next = removed->next; 
     prev = removed->prev;
-
     if (q->head == removed) {
         q->head = next;
     }
     if (q->tail == removed) {
         q->tail = prev;
     }
-
     if (next != NULL) {
         next->prev = prev;
     }
-    
     if (prev != NULL) {
         prev->next = next;
     }
