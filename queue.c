@@ -123,3 +123,57 @@ void freequeue(queue *q, freefun freemem)
     }
     free(q);
 }
+
+
+void *inorder(queue *q, node **cnode)
+{
+    if (*cnode == NULL) {
+        *cnode = q->head;
+    } else if ((*cnode)->next == NULL) {
+        return NULL;
+    } else {
+        *cnode = (*cnode)->next;
+    }
+    return (*cnode)->data;
+}
+
+
+void rmqueue(queue *q, void *target)
+{
+    node *cnode = NULL;
+    void *data;
+
+    while ((data = inorder(q, &cnode)) != NULL) {
+        if (data == target) {
+            swap(q, cnode);
+            free(cnode);
+            return;
+        }
+    }
+}
+
+
+void swap(queue *q, node *removed) {
+    node *next;
+    node *prev;
+
+    q->size --;
+
+    next = removed->next;
+    prev = removed->prev;
+
+    if (q->head == removed) {
+        q->head = next;
+    }
+    if (q->tail == removed) {
+        q->tail = prev;
+    }
+
+    if (next != NULL) {
+        next->prev = prev;
+    }
+    
+    if (prev != NULL) {
+        prev->next = next;
+    }
+}

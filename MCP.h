@@ -26,6 +26,7 @@ typedef struct node {
 
 typedef void (*freefun)(void*);
 
+/* Queue Methods*/
 queue *newqueue();
 
 void enqueue(queue *q, void *data);
@@ -34,6 +35,13 @@ void *dequeue(queue *q);
 
 void freequeue(queue *q, freefun fun);
 
+void *inorder(queue *q, node **cnode);
+
+void rmqueue(queue *q, void *target);
+
+void swap(queue *q, node *removed);
+
+/* Parse Methods */
 queue *readfile (char *path);
 
 void addcmdline (queue *q, char *buf);
