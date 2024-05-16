@@ -3,7 +3,7 @@
 # Brief :
 # Usuage: 
 
-all : part1 iobound cpubound
+all : part1 part2 iobound cpubound
 
 cpubound : cpubound.c
 	gcc -o cpubound cpubound.c
@@ -17,8 +17,14 @@ test_queue : test_queue.o queue.o parser.o
 test_queue.o : Tests/test_queue.c
 	gcc -o test_queue.o -c -g $^
 
+part2 : part2.o parser.o queue.o terminal.o
+	gcc -o part2 -g part1.o parser.o queue.o terminal.o
+
 part1 : part1.o parser.o queue.o terminal.o
 	gcc -o part1 -g part1.o parser.o queue.o terminal.o
+
+part2.o : part2.c
+	gcc -o part2.o -c -g part2.c
 
 part1.o : part1.c
 	gcc -o part1.o -c -g part1.c
