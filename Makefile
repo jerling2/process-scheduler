@@ -1,57 +1,39 @@
 # MCP Makefile
 # Author: Joseph Erlinger (jerling2@uoregon.edu)
-# Brief :
-# Usuage: 
 
-all : part1 part2 part3 part4 iobound cpubound
+CFLAGS = -c -g -Wall
+CC = gcc
+src_dir = src
+objects = parser.o queue.o terminal.o readproc.o
+targets = part1 part2 part3 part4
 
-readproc.o : readproc.c
-	gcc -o readproc.o -c -g -Wall readproc.c
+project : $(targets)
 
-cpubound : cpubound.c
-	gcc -o cpubound cpubound.c
+all : project cpubound iobound
 
-iobound : iobound.c
-	gcc -o iobound iobound.c
+part1 : $(src_dir)/part1.o $(objects:%=$(src_dir)/%)
+	$(CC) -o $@ $^
 
-test_queue : test_queue.o queue.o parser.o
-	gcc -o test_queue -g test_queue.o queue.o parser.o
+part2 : $(src_dir)/part2.o $(objects:%=$(src_dir)/%)
+	$(CC) -o $@ $^
 
-test_queue.o : Tests/test_queue.c
-	gcc -o test_queue.o -c -g $^
+part3 : $(src_dir)/part3.o $(objects:%=$(src_dir)/%)
+	$(CC) -o $@ $^
 
-part4 : part4.o parser.o queue.o terminal.o readproc.o
-	gcc -o part4 -g part4.o parser.o queue.o terminal.o readproc.o
+part4 : $(src_dir)/part4.o $(objects:%=$(src_dir)/%)
+	$(CC) -o $@ $^
 
-part3 : part3.o parser.o queue.o terminal.o
-	gcc -o part3 -g part3.o parser.o queue.o terminal.o
+cpubound : $(src_dir)/cpubound.o
+	$(CC) -o $@ $^
 
-part2 : part2.o parser.o queue.o terminal.o
-	gcc -o part2 -g part2.o parser.o queue.o terminal.o
+iobound : $(src_dir)/iobound.o
+	$(CC) -o $@ $^
 
-part1 : part1.o parser.o queue.o terminal.o
-	gcc -o part1 -g part1.o parser.o queue.o terminal.o
-
-part4.o : part4.c
-	gcc -o part4.o -c -g -Wall part4.c
-
-part3.o : part3.c
-	gcc -o part3.o -c -g -Wall part3.c
-
-part2.o : part2.c
-	gcc -o part2.o -c -g -Wall part2.c
-
-part1.o : part1.c
-	gcc -o part1.o -c -g -Wall part1.c
-
-parser.o : parser.c
-	gcc -o parser.o -c -g -Wall parser.c
-
-queue.o : queue.c
-	gcc -o queue.o -c -g -Wall queue.c
-
-terminal.o : terminal.c
-	gcc -o terminal.o -c -g -Wall terminal.c
+$(src_dir)/%.o: $(src_dir)/%.c
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean :
-	rm part[0-9] *.o
+	rm part[0-9] $(src_dir)/*.o
+
+cleanall : clean
+	rm iobound cpubound
