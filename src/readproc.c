@@ -74,7 +74,7 @@ char *ram (int pid)
 // Get the IO bytes_read information of a process.
 char *readBytes (int pid)
 {
-    int num;
+    int num = -1;
     char *bytes;
 
     bytes = (char *)malloc(sizeof(char)*BUFSIZ);
@@ -87,7 +87,7 @@ char *readBytes (int pid)
 // Get the IO bytes_write information of a process.
 char *writeBytes (int pid)
 {
-    int num;
+    int num = -1;
     char *bytes;
 
     bytes = (char *)malloc(sizeof(char)*BUFSIZ);
