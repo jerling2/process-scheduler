@@ -14,17 +14,19 @@ its own subprocess.
 #include "color.h"
 #include "terminal.h"
 
-void alarmhandler(int num) {
-    write(1, "Alarm recieved!\n", 16);
-    alarm(1);
-    return;
+
+/**
+ * @brief Resend any missed signals for safety.
+ * 
+ * This function never gets called, and I'm unsure if its necessary.
+ * 
+ * @param[in] signum the number representing the type of signal received. 
+ */
+void handler (int signum)
+{
+    kill(getpid(), signum);
 }
 
-void handler(int num) {
-    write(1, "User signal recieved!\n", 22);
-    kill(getpid(), SIGUSR1);
-    return;
-}
 
 /**
  * @brief Launch a pool of subprocesses to handle commands.
@@ -38,14 +40,18 @@ void handler(int num) {
  * consumed/emptied by this function.
  * @return procqueue that contains k-processes.
  */
-queue *createpool (queue *cmdqueue, sigset_t sigset)
+queue *createpool (queue *cmdqueue)
 {
     queue *procqueue;    // A queue to store processes in.
     cmd *command;        // The command that will be executed by a subprocess.
     pid_t *pid;          // The pid output of fork.
     int numcmds;         // The size of the cmdqueue.
     int i;               // The ith command.
+    sigset_t sigset;
     int sig;
+
+    sigemptyset(&sigset);
+    sigaddset(&sigset, SIGUSR1);
 
     procqueue = newqueue();
     numcmds = cmdqueue->size;
@@ -89,64 +95,79 @@ int main (int argc, char *argv[])
     queue *procqueue = NULL;    // Queue of running processes.
     int numchild;               // Number of children.
     int i;                      // The ith child.
-    pid_t mcppid;               // Process ID of the Master Control Program.
+    pid_t mcppid;               // Process ID of the MCP.
     pid_t *pid;                 // A child's pid.
     node *cnode = NULL;         // Node representing the currrent node.
-    sigset_t sigset;            // Set of signals 
+    struct sigaction sa;
+    sigset_t sigset;
     int sig;
-    struct sigaction sa_usr1;
-    struct sigaction sa_alrm;
-   
-    /* Don't allow SIGUSR1 to kill */
-    sigemptyset(&sigset); 
-    sigaddset(&sigset, SIGUSR1);
-    sigaddset(&sigset, SIGALRM);
-    sigaddset(&sigset, SIGSTOP);
-    sigprocmask(SIG_BLOCK, &sigset, NULL);  // Prevents weird segfaults.
-    
-    sa_usr1.sa_handler = handler;
-    sa_alrm.sa_handler = alarmhandler;
-
-    sigaction(SIGUSR1, &sa_usr1, NULL);
-    sigaction(SIGALRM, &sa_alrm, NULL);
-    sigaction(SIGSTOP, &sa_usr1, NULL);
 
     if (argc != 2) {                                       // Input validation.
         fprintf(stderr, "Error: invalid usage. Try %s <filename>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+    /* Initialize sigaction struct */
+    sa.sa_handler = handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+
+    /* Initialize sigset */
+    sigemptyset(&sigset);
+
+    /* Add signals to be handled to sigset */
+    sigaddset(&sigset, SIGUSR1);
+    sigaddset(&sigset, SIGALRM);
+
+    /* Block SIGUSR1 and SIGALRM making them behave synchronously */
+    sigprocmask(SIG_BLOCK, &sigset, NULL);
+
+    /* Attach signals to the handler function */
+    sigaction(SIGUSR1, &sa, NULL);
+    sigaction(SIGALRM, &sa, NULL);
+
+    mcppid = getpid();
+    infoNumMsg("MCP pid=", mcppid);
+
     if ((cmdqueue = readfile(argv[1])) == NULL) {
         goto cleanup;                            // Error: Could not read file.
     }
-    if ((procqueue = createpool(cmdqueue, sigset)) == NULL) {
+    if ((procqueue = createpool(cmdqueue)) == NULL) {
         goto cleanup;      // Child process needs to be cleaned and terminated.
     }
     if (displayprocs(procqueue) == -1) {
         goto cleanup;      // Child process needs to be cleaned and terminated.
     }
-    
-    infoMsg("MCP is waiting for x seconds.");
-    alarm(5);
-    sigwait(&sigset, &sig);
-    mcppid = getpid();
-    printf("\033[35;1mMCP pid=%d\n\033[0m", mcppid);
+
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
-        setpgid(*pid, mcppid);
+        setpgid(*pid, mcppid); // Put all children in the same Group
     }
-    
-    infoMsg("MCP is sending SIGUSR1 to all its children.");
-    kill(0, SIGUSR1);
-    infoMsg("MCP is sending SIGSTOP to all its children.");
-    
+
+    infoMsg("MCP is waiting for alarm (in 5 seconds)");
+    infoMsg("Subprocesses will be allowed to run for 2 seconds.");
+    alarm(5);
+    sigwait(&sigset, &sig); // Consume the pending alarm signal.
+    infoMsg("MCP sent SIGUSR1 to children.");
+    killpg(mcppid, SIGUSR1);
+    sigwait(&sigset, &sig); // Consume the pending SIGUSR1 signal.
+    infoMsg("MCP will stop subprocesses in 2 seconds");
+    alarm(2);
+    sigwait(&sigset, &sig); // Consume the pending SIGUSR1 signal.
+
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
         kill(*pid, SIGSTOP);
     }
+
+    infoMsg("MCP is waiting for alarm (in 5 seconds)");
+    infoMsg("Subprocesses will be allowed to finish.");
+    alarm(5);
+    sigwait(&sigset, &sig); // Consume the pending alarm signal.
     
+    infoMsg("MCP sent SIGCONT to children.");
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
         kill(*pid, SIGCONT);
     }
-    
-    infoMsg("MCP is waiting.");
+
     numchild = procqueue->size;
     for (i = 0; i < numchild; i++) {
         pid_t child = wait(NULL);     // Wait for each child process to finish.

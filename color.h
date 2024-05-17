@@ -83,3 +83,14 @@ static inline void infoMsg (char *message)
     resetColor();
     fflush(stdout);
 }
+
+/**
+ * @brief Print in bold magenta text, "Info: %s%d".
+ */
+static inline void infoNumMsg (char *message, int num)
+{
+    setBoldColor(MAGENTA);
+    printf("Info: %s%d\n", message, num);
+    resetColor();
+    fflush(stdout);
+}
