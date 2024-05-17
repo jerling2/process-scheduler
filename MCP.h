@@ -37,7 +37,7 @@ void freequeue(queue *q, freefun fun);
 
 void *inorder(queue *q, node **cnode);
 
-void rmqueue(queue *q, void *target);
+int rmqueue(queue *q, void *target);
 
 void swap(queue *q, node *removed);
 

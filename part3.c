@@ -24,7 +24,7 @@ its own subprocess.
  */
 void handler (int signum)
 {
-    kill(getpid(), signum);
+    printf("Received SIGCHLD\n");
 }
 
 
@@ -121,8 +121,7 @@ int main (int argc, char *argv[])
     sigprocmask(SIG_BLOCK, &sigset, NULL);
 
     /* Attach signals to the handler function */
-    sigaction(SIGUSR1, &sa, NULL);
-    sigaction(SIGALRM, &sa, NULL);
+    sigaction(SIGCHLD, &sa, NULL);
 
     /* Get PID of MCP to be later used to set the PGID */
     mcppid = getpid();
@@ -138,57 +137,47 @@ int main (int argc, char *argv[])
         goto cleanup;      // Child process needs to be cleaned and terminated.
     }
 
+    /* ------------------------------------------- */
+    /*         Subprocesses waiting on SIGUSR1     */
+    /* ------------------------------------------- */
+
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
         setpgid(*pid, mcppid);           // Put all children in the same Group.
     }
-
-    /* ------------------------------------------- */
-    /*         Subprocesses are not running        */
-    /* ------------------------------------------- */
-
-    /* Wait before allowing subprocesses to exec() */
-    infoMsg("MCP is waiting for alarm (in 5 seconds)");
-    infoMsg("Subprocesses will be allowed to run for 2 seconds.");
-    alarm(5);
-    sigwait(&sigset, &sig);                // Consume the pending alarm signal.
-    infoMsg("MCP sent SIGUSR1 to children.");
-    killpg(mcppid, SIGUSR1);
-    sigwait(&sigset, &sig);              // Consume the pending SIGUSR1 signal.
-    
-    /* ------------------------------------------- */
-    /*           Subprocesses are running          */
-    /* ------------------------------------------- */
-
-    /* Stop subprocesses in two seconds. */
-    infoMsg("MCP will stop subprocesses in 2 seconds");
-    alarm(2);
-    sigwait(&sigset, &sig);              // Consume the pending SIGUSR1 signal.
+    killpg(mcppid, SIGUSR1);                      // All children exec at once.
+    sigwait(&sigset, &sig);                             // consume the SIGUSR1.
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
-        kill(*pid, SIGSTOP);                      // Signal STOP to each child.
+        kill(*pid, SIGSTOP);                  // Immediately stop all children.
     }
 
-    /* ------------------------------------------- */
-    /*         Subprocesses are not running        */
-    /* ------------------------------------------- */
+    while ((pid=(pid_t *)demote(procqueue)) != NULL) {
+        int stat;
+        int wstatus = 0;
 
-    /* Wait five seconds before allowing subprocesses continue */
-    infoMsg("MCP is waiting for alarm (in 5 seconds)");
-    infoMsg("Subprocesses will be allowed to finish.");
-    alarm(5);
-    sigwait(&sigset, &sig);                // Consume the pending alarm signal.
-    infoMsg("MCP sent SIGCONT to children.");
-    while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
-        kill(*pid, SIGCONT);                      // Signal CONT to each child.
-    }
-    
-    /* ------------------------------------------- */
-    /*           Subprocesses are running          */
-    /* ------------------------------------------- */
+        dispatchMsg(*pid);
+        kill(*pid, SIGCONT);
+        alarm(1);
+        sigwait(&sigset, &sig); // consume the alarm or child signal.
+        kill(*pid, SIGSTOP);
+        
+        stat = waitpid(*pid, &wstatus, WNOHANG);
+        if (stat > 0) {
+            if (WIFEXITED(wstatus)) {
+                waitpid(*pid, NULL, 0);
+                terminateMsg(*pid);
+                alarm(0);
+                if (rmqueue(procqueue, pid) == -1) {
+                    errorMsg("PID was not removed from queue");
+                }
+            }
+        } else if (stat == 0) {
+            preemptMsg(*pid);
+        } else {
+            criticalMsg("Something went wrong");
+            exit(EXIT_FAILURE);
+        }
 
-    numchild = procqueue->size;
-    for (i = 0; i < numchild; i++) {
-        pid_t child = wait(NULL);     // Wait for each child process to finish.
-        terminateMsg(child);
+
     }
 
     cleanup:

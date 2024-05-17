@@ -8,6 +8,7 @@ interact with the node structure.
 #include <stdio.h>
 #include <stdlib.h>
 #include "MCP.h"
+#include "color.h"
 
 
 /** 
@@ -156,7 +157,7 @@ void *inorder(queue *q, node **cnode)
  * @param[in] queue containing the target data.
  * @param[in] target Pointer used to identify the node to be removed.
  */
-void rmqueue(queue *q, void *target)
+int rmqueue(queue *q, void *target)
 {
     node *cnode = NULL;    // Pointer to the current node.
     void *data;            // Pointer to the data stored in the current node.
@@ -165,9 +166,10 @@ void rmqueue(queue *q, void *target)
         if (data == target) {
             swap(q, cnode);
             free(cnode);
-            return;
+            return 0;
         }
     }
+    return -1;
 }
 
 
@@ -227,6 +229,7 @@ void *demote(queue *q)
     oldtail->next = oldhead;
     newhead->prev = NULL;
     oldhead->next = NULL;
+    oldhead->prev = oldtail;
     q->head = newhead;
     q->tail = oldhead;
     return oldhead->data;

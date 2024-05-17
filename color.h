@@ -9,9 +9,11 @@
 enum Colors {
     RESET_COLOR,
     RED = 31,
+    GREEN = 32,
     YELLOW = 33,
     MAGENTA = 35,
-    CYAN = 36
+    CYAN = 36,
+    DEFAULT = 39
 };
 
 static inline void setBoldColor (int code)
@@ -47,6 +49,28 @@ static inline void terminateMsg (int pid)
 {
     setBoldColor(YELLOW);
     printf("Child terminated pid=%d\n", pid);
+    resetColor();
+    fflush(stdout);
+}
+
+/**
+ * @brief Print in bold 'default' text, "Child preempted pid=%d".
+ */
+static inline void preemptMsg (int num)
+{
+    setBoldColor(DEFAULT);
+    printf("Child preempted pid=%d\n", num);
+    resetColor();
+    fflush(stdout);
+}
+
+/**
+ * @brief Print in bold 'default' text, "Info: %s%d".
+ */
+static inline void dispatchMsg (int num)
+{
+    setBoldColor(DEFAULT);
+    printf("Child dispatched pid=%d\n", num);
     resetColor();
     fflush(stdout);
 }
