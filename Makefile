@@ -24,10 +24,10 @@ part1 : part1.o parser.o queue.o terminal.o
 	gcc -o part1 -g part1.o parser.o queue.o terminal.o
 
 part2.o : part2.c
-	gcc -o part2.o -c -g part2.c
+	gcc -o part2.o -c -g -Wall part2.c
 
 part1.o : part1.c
-	gcc -o part1.o -c -g part1.c
+	gcc -o part1.o -c -g -Wall part1.c
 
 parser.o : parser.c
 	gcc -o parser.o -c -g -Wall parser.c

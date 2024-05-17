@@ -9,10 +9,15 @@ its own subprocess.
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <signal.h>
 #include "MCP.h"
 #include "color.h"
 #include "terminal.h"
 
+
+void handler(int num) {
+    return;
+}
 
 /**
  * @brief Launch a pool of subprocesses to handle commands.
@@ -33,7 +38,11 @@ queue *createpool (queue *cmdqueue)
     pid_t *pid;          // The pid output of fork.
     int numcmds;         // The size of the cmdqueue.
     int i;               // The ith command.
-
+    sigset_t sigset;
+    int sig;
+    
+    sigemptyset(&sigset);
+    sigaddset(&sigset, SIGUSR1);
     procqueue = newqueue();
     numcmds = cmdqueue->size;
     for (i = 0; i < numcmds; i++) {
@@ -53,6 +62,9 @@ queue *createpool (queue *cmdqueue)
             createMsg(*pid);
             continue;
         }
+        // sleep(10);
+        printf("no longer sleeping\n");
+        sigwait(&sigset, &sig);
         if (execvp(command->path, command->argv) == -1) {       // Child logic.
             fprintf(stderr, "Could not execute '%s'. ", command->path);
             perror("execvp");
@@ -75,6 +87,13 @@ int main (int argc, char *argv[])
     queue *procqueue = NULL;    // Queue of running processes.
     int numchild;               // Number of children.
     int i;                      // The ith child.
+    pid_t mcppid;               // Process ID of the Master Control Program.
+    pid_t *pid;                 // A child's pid.
+    node *cnode = NULL;         // Node representing the currrent node.
+    
+    struct sigaction sa;
+    sa.sa_handler = handler;
+    sigaction(SIGUSR1, &sa, NULL);
 
     if (argc != 2) {                                       // Input validation.
         fprintf(stderr, "Error: invalid usage. Try %s <filename>\n", argv[0]);
@@ -89,6 +108,18 @@ int main (int argc, char *argv[])
     if (displayprocs(procqueue) == -1) {
         goto cleanup;      // Child process needs to be cleaned and terminated.
     }
+    
+    infoMsg("MCP is waiting for x seconds.");
+    mcppid = getpid();
+    
+    while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
+        setpgid(*pid, mcppid);
+    }
+    
+    infoMsg("MCP is sending SIGUSR1 to all its children.");
+    kill(0, SIGUSR1);
+
+    infoMsg("MCP is now waiting.");
     numchild = procqueue->size;
     for (i = 0; i < numchild; i++) {
         pid_t child = wait(NULL);     // Wait for each child process to finish.
