@@ -138,6 +138,7 @@ void *inorder(queue *q, node **cnode)
     if (*cnode == NULL) {
         *cnode = q->head;
     } else if ((*cnode)->next == NULL) {
+        *cnode = NULL;
         return NULL;
     } else {
         *cnode = (*cnode)->next;
