@@ -3,10 +3,7 @@
 # Brief :
 # Usuage: 
 
-all : part1 part2 part3 iobound cpubound readproc
-
-readproc : readproc.o
-	gcc -o readproc readproc.o
+all : part1 part2 part3 iobound cpubound
 
 readproc.o : readproc.c
 	gcc -o readproc.o -c -g -Wall readproc.c
