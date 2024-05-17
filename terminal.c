@@ -55,6 +55,9 @@ int displayprocs (queue *procqueue)
         errorMsg("xfce4-terminal or gnome-terminal was not found in /usr/bin/");
         return 0;
     }
+    if (procqueue->size > 20) {
+        warningMsg("Only the first 20 PIDs will be tracked by 'top'.");
+    }
     createtopscript(procqueue);
     if (openterm(terminal) == -1) {
         return -1;             // Child process will be cleaned and terminated.
@@ -99,12 +102,18 @@ void createtopscript (queue *procqueue)
     FILE *fp;              // File pointer to the TOPSCRIPT.
     pid_t *data;           // The data stored in a node of the procqueue.
     node *cnode = NULL;    // The current node.
+    int i;          
 
     fp = fopen(TOPSCRIPT, "w+");
     fprintf(fp, "#!/bin/bash\n");
     fprintf(fp, "top -d0.1");
+    
+    i = 0;
     while ((data = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
+        if (i == 20)
+            break;
         fprintf(fp, " -p%d", *data);
+        i++;
     }
     chmod(TOPSCRIPT, S_IRWXU);
     fclose(fp);

@@ -63,12 +63,23 @@ static inline void errorMsg (char *message)
 }
 
 /**
+ * @brief Print in bold red text, "Error: ...".
+ */
+static inline void warningMsg (char *message)
+{
+    setBoldColor(RED);
+    printf("Warning: %s\n", message);
+    resetColor();
+    fflush(stdout);
+}
+
+/**
  * @brief Print in bold red text, "Critical: ...".
  */
 static inline void criticalMsg (char *message)
 {
     setBoldColor(RED);
-    printf("Critical: %s\n", message);
+    printf("CRITICAL: %s\n", message);
     resetColor();
     fflush(stdout);
 }
