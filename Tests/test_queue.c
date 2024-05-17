@@ -96,6 +96,17 @@ int main (int argc, char *argv[])
     enqueue(q, two);
     enqueue(q, three);
     
+    /* Demote Test */
+
+    printf("Queue:\n");
+    printqueue(q);
+    
+    for (int i = 0; i < 3; i++) {
+        int data = ((cmd *)demote(q))->size;
+        printf("Demote = %d\n", data);
+        printqueue(q);
+    }
+
     /* Dequeue Test */
     printf("Dequeue Test\n");
     printqueue(q);

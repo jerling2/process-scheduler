@@ -201,3 +201,42 @@ void swap(queue *q, node *removed) {
         prev->next = next;
     }
 }
+
+
+/**
+ * @brief Return data from the head and send it to the back of the queue.
+ * 
+ * This function makes a target node's predecessor and successor point to each
+ * other instead of pointing to target node. Thereby removing the target node
+ * from the queue. Note: this function does not free any memory.
+ * 
+ * @param[in] queue containing nodes.
+ * @return data of the demoted node.
+ */
+void *demote(queue *q)
+{
+    node *oldhead;
+    node *oldtail;
+    node *newhead;
+
+    if (q->size == 0) {
+        return NULL;
+    }
+    if (q->size == 1) {
+        return q->head->data;
+    }
+    
+    oldhead = q->head;
+    oldtail = q->tail;
+
+    newhead = oldhead->next;
+    newhead->prev = NULL;
+    
+    oldtail->next = oldhead;
+    oldhead->next = NULL;
+
+    q->head = newhead;
+    q->tail = oldhead;
+    
+    return oldhead->data;
+}

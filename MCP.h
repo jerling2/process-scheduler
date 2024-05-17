@@ -41,6 +41,8 @@ void rmqueue(queue *q, void *target);
 
 void swap(queue *q, node *removed);
 
+void *demote(queue *q);
+
 /* Parse Methods */
 queue *readfile (char *path);
 
