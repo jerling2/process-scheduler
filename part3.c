@@ -10,9 +10,11 @@ its own subprocess.
 #include <sys/wait.h>
 #include <signal.h>
 #include <signal.h>
+#include <errno.h>
 #include "MCP.h"
 #include "color.h"
 #include "terminal.h"
+
 
 
 /**
@@ -86,6 +88,25 @@ queue *createpool (queue *cmdqueue)
 }
 
 
+int blocking_scheduler(sigset_t *sigset_schedule, int *sig)
+{
+    pid_t pid;
+    int wstatus;
+
+    while(sigwait(sigset_schedule, sig) == 0) {
+        pid = waitpid(-1, &wstatus, WNOHANG);
+        if (pid > 0 && WIFEXITED(wstatus)) {
+            return pid;
+        }
+        if (*sig == SIGALRM) {
+            return 0;
+        }
+    }
+    perror("blocking_scheduler");
+    return -1;
+}
+
+
 /**
  * @usuage ./part1 <filename>
  */
@@ -93,13 +114,12 @@ int main (int argc, char *argv[])
 {
     queue *cmdqueue = NULL;     // Queue of commands.
     queue *procqueue = NULL;    // Queue of running processes.
-    int numchild;               // Number of children.
-    int i;                      // The ith child.
     pid_t mcppid;               // Process ID of the MCP.
     pid_t *pid;                 // A child's pid.
     node *cnode = NULL;         // Node representing the currrent node.
     struct sigaction sa;        // sigaction to handle ansychronous signals.
     sigset_t sigset;            // Set of custom handled signals.
+    sigset_t sigset_schedule;
     int sig;                    // Signal number (used by sigwait) 
 
     if (argc != 2) {                                       // Input validation.
@@ -116,12 +136,19 @@ int main (int argc, char *argv[])
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGUSR1);
     sigaddset(&sigset, SIGALRM);
+    
+    sigemptyset(&sigset_schedule);
+    sigaddset(&sigset_schedule, SIGALRM);
+    sigaddset(&sigset_schedule, SIGCHLD);
+    
+    /* Attach signals to the handler function */
+    sigaction(SIGALRM, &sa, NULL);
+    sigaction(SIGUSR1, &sa, NULL);
+    sigaction(SIGCHLD, &sa, NULL);
 
     /* Block SIGUSR1 and SIGALRM making them behave synchronously */
     sigprocmask(SIG_BLOCK, &sigset, NULL);
-
-    /* Attach signals to the handler function */
-    sigaction(SIGCHLD, &sa, NULL);
+    sigprocmask(SIG_BLOCK, &sigset_schedule, NULL);
 
     /* Get PID of MCP to be later used to set the PGID */
     mcppid = getpid();
@@ -145,39 +172,28 @@ int main (int argc, char *argv[])
         setpgid(*pid, mcppid);           // Put all children in the same Group.
     }
     killpg(mcppid, SIGUSR1);                      // All children exec at once.
-    sigwait(&sigset, &sig);                             // consume the SIGUSR1.
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
         kill(*pid, SIGSTOP);                  // Immediately stop all children.
     }
 
     while ((pid=(pid_t *)demote(procqueue)) != NULL) {
-        int stat;
-        int wstatus = 0;
+        pid_t exited_pid;
 
         dispatchMsg(*pid);
         kill(*pid, SIGCONT);
         alarm(1);
-        sigwait(&sigset, &sig); // consume the alarm or child signal.
-        kill(*pid, SIGSTOP);
-        
-        stat = waitpid(*pid, &wstatus, WNOHANG);
-        if (stat > 0) {
-            if (WIFEXITED(wstatus)) {
-                waitpid(*pid, NULL, 0);
-                terminateMsg(*pid);
-                alarm(0);
-                if (rmqueue(procqueue, pid) == -1) {
-                    errorMsg("PID was not removed from queue");
-                }
-            }
-        } else if (stat == 0) {
+
+        exited_pid = blocking_scheduler(&sigset_schedule, &sig);
+
+        if (exited_pid > 0 && exited_pid == *pid) {
+            terminateMsg(*pid);
+            rmqueue(procqueue, pid);
+        } else if (exited_pid == 0) {
             preemptMsg(*pid);
         } else {
-            criticalMsg("Something went wrong");
-            exit(EXIT_FAILURE);
+            perror("Minor error"); // no such process
         }
-
-
+        kill(*pid, SIGSTOP);
     }
 
     cleanup:
