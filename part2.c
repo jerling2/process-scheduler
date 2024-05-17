@@ -47,8 +47,8 @@ queue *createpool (queue *cmdqueue)
     pid_t *pid;          // The pid output of fork.
     int numcmds;         // The size of the cmdqueue.
     int i;               // The ith command.
-    sigset_t sigset;
-    int sig;
+    sigset_t sigset;     // Sigset containing SIGUSR1.
+    int sig;             // Signal number (used by sigwait).
 
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGUSR1);
@@ -98,9 +98,9 @@ int main (int argc, char *argv[])
     pid_t mcppid;               // Process ID of the MCP.
     pid_t *pid;                 // A child's pid.
     node *cnode = NULL;         // Node representing the currrent node.
-    struct sigaction sa;
-    sigset_t sigset;
-    int sig;
+    struct sigaction sa;        // sigaction to handle ansychronous signals.
+    sigset_t sigset;            // Set of custom handled signals.
+    int sig;                    // Signal number (used by sigwait) 
 
     if (argc != 2) {                                       // Input validation.
         fprintf(stderr, "Error: invalid usage. Try %s <filename>\n", argv[0]);
@@ -112,10 +112,8 @@ int main (int argc, char *argv[])
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
 
-    /* Initialize sigset */
+    /* Initialize and add signals to sigset */
     sigemptyset(&sigset);
-
-    /* Add signals to be handled to sigset */
     sigaddset(&sigset, SIGUSR1);
     sigaddset(&sigset, SIGALRM);
 
@@ -126,6 +124,7 @@ int main (int argc, char *argv[])
     sigaction(SIGUSR1, &sa, NULL);
     sigaction(SIGALRM, &sa, NULL);
 
+    /* Get PID of MCP to be later used to set the PGID */
     mcppid = getpid();
     infoNumMsg("MCP pid=", mcppid);
 
@@ -140,33 +139,51 @@ int main (int argc, char *argv[])
     }
 
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
-        setpgid(*pid, mcppid); // Put all children in the same Group
+        setpgid(*pid, mcppid);           // Put all children in the same Group.
     }
 
+    /* ------------------------------------------- */
+    /*         Subprocesses are not running        */
+    /* ------------------------------------------- */
+
+    /* Wait before allowing subprocesses to exec() */
     infoMsg("MCP is waiting for alarm (in 5 seconds)");
     infoMsg("Subprocesses will be allowed to run for 2 seconds.");
     alarm(5);
-    sigwait(&sigset, &sig); // Consume the pending alarm signal.
+    sigwait(&sigset, &sig);                // Consume the pending alarm signal.
     infoMsg("MCP sent SIGUSR1 to children.");
     killpg(mcppid, SIGUSR1);
-    sigwait(&sigset, &sig); // Consume the pending SIGUSR1 signal.
+    sigwait(&sigset, &sig);              // Consume the pending SIGUSR1 signal.
+    
+    /* ------------------------------------------- */
+    /*           Subprocesses are running          */
+    /* ------------------------------------------- */
+
+    /* Stop subprocesses in two seconds. */
     infoMsg("MCP will stop subprocesses in 2 seconds");
     alarm(2);
-    sigwait(&sigset, &sig); // Consume the pending SIGUSR1 signal.
-
+    sigwait(&sigset, &sig);              // Consume the pending SIGUSR1 signal.
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
-        kill(*pid, SIGSTOP);
+        kill(*pid, SIGSTOP);                      // Signal STOP to each child.
     }
 
+    /* ------------------------------------------- */
+    /*         Subprocesses are not running        */
+    /* ------------------------------------------- */
+
+    /* Wait five seconds before allowing subprocesses continue */
     infoMsg("MCP is waiting for alarm (in 5 seconds)");
     infoMsg("Subprocesses will be allowed to finish.");
     alarm(5);
-    sigwait(&sigset, &sig); // Consume the pending alarm signal.
-    
+    sigwait(&sigset, &sig);                // Consume the pending alarm signal.
     infoMsg("MCP sent SIGCONT to children.");
     while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
-        kill(*pid, SIGCONT);
+        kill(*pid, SIGCONT);                      // Signal CONT to each child.
     }
+    
+    /* ------------------------------------------- */
+    /*           Subprocesses are running          */
+    /* ------------------------------------------- */
 
     numchild = procqueue->size;
     for (i = 0; i < numchild; i++) {
