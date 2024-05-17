@@ -62,7 +62,6 @@ int displayprocs (queue *procqueue)
     if (openterm(terminal) == -1) {
         return -1;             // Child process will be cleaned and terminated.
     }
-    // removetopscript(); // BUG: commented out for now.
     return 0;
 }
 
@@ -162,15 +161,4 @@ int openterm (Terminal terminal)
         criticalMsg("openterm: Child unable to execv(). Child terminating.");
     }
     return -1;
-}
-
-
-/**
- * @brief Remove the TOPSCRIPT.
- */
-void removetopscript()
-{
-    if (unlink(TOPSCRIPT) == -1) 
-        perror("removetopscript");
-    return;
 }

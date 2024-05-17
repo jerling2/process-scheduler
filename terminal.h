@@ -1,4 +1,8 @@
-#pragma once
+/*
+Author: Joseph Erlinger (jerling2@uoregon.edu)
+*/
+#ifndef TERMINAL_H
+#define TERMINAL_H
 #include <unistd.h>
 #include "MCP.h"
 
@@ -25,4 +29,4 @@ int openterm (Terminal type);
 
 void createtopscript (queue *procqueue);
 
-void removetopscript();
+#endif

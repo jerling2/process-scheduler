@@ -3,7 +3,7 @@
 # Brief :
 # Usuage: 
 
-all : part1 part2 part3 iobound cpubound
+all : part1 part2 part3 part4 iobound cpubound
 
 readproc.o : readproc.c
 	gcc -o readproc.o -c -g -Wall readproc.c
@@ -20,6 +20,9 @@ test_queue : test_queue.o queue.o parser.o
 test_queue.o : Tests/test_queue.c
 	gcc -o test_queue.o -c -g $^
 
+part4 : part4.o parser.o queue.o terminal.o readproc.o
+	gcc -o part4 -g part4.o parser.o queue.o terminal.o readproc.o
+
 part3 : part3.o parser.o queue.o terminal.o
 	gcc -o part3 -g part3.o parser.o queue.o terminal.o
 
@@ -28,6 +31,9 @@ part2 : part2.o parser.o queue.o terminal.o
 
 part1 : part1.o parser.o queue.o terminal.o
 	gcc -o part1 -g part1.o parser.o queue.o terminal.o
+
+part4.o : part4.c
+	gcc -o part4.o -c -g -Wall part4.c
 
 part3.o : part3.c
 	gcc -o part3.o -c -g -Wall part3.c

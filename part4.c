@@ -14,6 +14,7 @@ its own subprocess.
 #include "MCP.h"
 #include "color.h"
 #include "terminal.h"
+#include "readproc.h"
 
 
 /**
@@ -61,19 +62,16 @@ queue *createpool (queue *cmdqueue)
         command = (cmd *)dequeue(cmdqueue);
         if (command->path == NULL) {       // Handle poor constructed commands.
             freecmd(command);
-            free(pid);
             continue;
         }
         if ((*pid = fork()) == -1) {                            // Fork process.
             criticalMsg("createpool: MCP unable to fork() process.");
-            freecmd(command);
-            free(pid);
             continue;                         // We don't want the MCP to exit.
         }
         if (*pid > 0) {                                            // MCP Logic.
-            createMsg(*pid);
             enqueue(procqueue, pid);
             freecmd(command);
+            createMsg(*pid);
             continue;
         }
         sigwait(&sigset, &sig);
@@ -119,7 +117,26 @@ int blocking_scheduler(sigset_t *sigset_schedule, int *sig)
 
 
 /**
- * @usuage ./part3 <filename>
+ * @brief Display some stats about the running processes.
+ * 
+ * This function uses readproc. Read readproc for more detail.
+ * 
+ * @param[in] procqueue that contains running processes.
+ */
+void showstats(queue *procqueue)
+{
+    pid_t *pid;            // A child's pid.
+    node *cnode = NULL;    // Node representing the current node.
+    
+    printheader();
+    while ((pid=(pid_t *)inorder(procqueue, &cnode))!=NULL){ 
+        printrow(*pid);
+    }
+}
+
+
+/**
+ * @usuage ./part4 <filename>
  */
 int main (int argc, char *argv[]) 
 {
@@ -160,7 +177,6 @@ int main (int argc, char *argv[])
     sigprocmask(SIG_BLOCK, &sigset_schedule, NULL);
     /* Get PID of MCP to be later used to set the PGID */
     mcppid = getpid();
-    infoNumMsg("MCP pid=", mcppid);
     /* -- End of Initialization --*/
 
     if ((cmdqueue = readfile(argv[1])) == NULL) {
@@ -182,22 +198,18 @@ int main (int argc, char *argv[])
     /* Continously cycle through procqueue in RR order */
     while ((pid=(pid_t *)demote(procqueue)) != NULL) {
         kill(*pid, SIGCONT);                 // Dispatch the scheduled process.
-        dispatchMsg(*pid);                            
         alarm(1);                                      // Size of time quantum.
+        showstats(procqueue);                                 // Display Table.
         exited_pid = blocking_scheduler(&sigset_schedule, &sig);
         if (exited_pid > 0 && exited_pid == *pid) {
-            terminateMsg(*pid);
-            rmqueue(procqueue, pid);                     // Process terminated. 
+            rmqueue(procqueue, pid);          // Remove exited node from queue.
             free(pid);                                     // Free pid pointer.
-        } else if (exited_pid == 0) {
-            preemptMsg(*pid);                             // Process preempted.
-            kill(*pid, SIGSTOP);                         // Time slice expired.
         } else {
-            kill(*pid, SIGSTOP);                    //< this might be overkill?
+            kill(*pid, SIGSTOP);                         // Time slice expired.
         }
     }
 
-    /* Free all resources before leaving. s*/
+    /* Free all resources before leaving. */
     cleanup:
     freequeue(cmdqueue, (void *)freecmd);
     freequeue(procqueue, free);

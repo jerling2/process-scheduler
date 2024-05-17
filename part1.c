@@ -95,6 +95,7 @@ int main (int argc, char *argv[])
         terminateMsg(child);
     }
 
+    /* Free all resources before leaving. */
     cleanup:
     freequeue(cmdqueue, (void *)freecmd);
     freequeue(procqueue, free);

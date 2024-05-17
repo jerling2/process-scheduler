@@ -136,6 +136,9 @@ void freequeue(queue *q, freefun freemem)
  */
 void *inorder(queue *q, node **cnode)
 {
+    if (q->size == 0) {
+        return NULL;
+    }
     if (*cnode == NULL) {
         *cnode = q->head;
     } else if ((*cnode)->next == NULL) {
