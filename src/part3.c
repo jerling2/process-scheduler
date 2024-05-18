@@ -119,6 +119,30 @@ int blocking_scheduler(sigset_t *sigset_schedule, int *sig)
 
 
 /**
+ * @brief A process can terminate before it recieves SIGSTOP but after SIGALRM.
+ * 
+ * This function clears the terminated processes that somehow sliped pass the
+ * normal checking behavior. Very common for processes that have a runtime equal
+ * to the quantum size.
+ */
+void garbageCollector(queue *procqueue, pid_t exited_pid)
+{
+    pid_t *pid;            // A child's pid.
+    node *cnode = NULL;    // Node representing the currrent node.
+
+    infoMsg("Garbage collector activated.");
+    while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
+        if (exited_pid == *pid) {
+            terminateMsg(*pid);
+            rmqueue(procqueue, pid);                     // Process terminated.
+            free(pid);                                     // Free pid pointer.
+            return;
+        }
+    }
+}
+
+
+/**
  * @usuage ./part3 <filename>
  */
 int main (int argc, char *argv[]) 
@@ -189,6 +213,8 @@ int main (int argc, char *argv[])
             terminateMsg(*pid);
             rmqueue(procqueue, pid);                     // Process terminated. 
             free(pid);                                     // Free pid pointer.
+        } else if (exited_pid > 0 && exited_pid != *pid) {
+            garbageCollector(procqueue, exited_pid);
         } else if (exited_pid == 0) {
             preemptMsg(*pid);                             // Process preempted.
             kill(*pid, SIGSTOP);                         // Time slice expired.
