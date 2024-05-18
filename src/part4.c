@@ -62,6 +62,7 @@ queue *createpool (queue *cmdqueue)
         command = (cmd *)dequeue(cmdqueue);
         if (command->path == NULL) {       // Handle poor constructed commands.
             freecmd(command);
+            free(pid);
             continue;
         }
         if ((*pid = fork()) == -1) {                            // Fork process.
