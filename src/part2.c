@@ -59,6 +59,7 @@ queue *createpool (queue *cmdqueue)
         pid = (pid_t *)malloc(sizeof(pid_t));
         command = (cmd *)dequeue(cmdqueue);
         if (command->path == NULL) {       // Handle poor constructed commands.
+            free(pid);
             freecmd(command);
             continue;
         }
