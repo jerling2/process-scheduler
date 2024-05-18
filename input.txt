@@ -1,5 +1,7 @@
 ls -a -r -s
 sleep 1
 invalid name
-./iobound -seconds 4
-./cpubound -seconds 3
+;; ;;; ; ; ./iobound -seconds 10; ; ;; ;; ls
+./cpubound -seconds 5; test;;
+ls ; pwd; mkdir a; cd a; echo "hello world"
+ ;
