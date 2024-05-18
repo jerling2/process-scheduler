@@ -213,7 +213,7 @@ int main (int argc, char *argv[])
             terminateMsg(*pid);
             rmqueue(procqueue, pid);                     // Process terminated. 
             free(pid);                                     // Free pid pointer.
-        } else if (exited_pid > 0 && exited_pid != *pid) {
+        } else if (exited_pid > 0 && exited_pid != *pid) {           // Tricky.
             garbageCollector(procqueue, exited_pid);
         } else if (exited_pid == 0) {
             preemptMsg(*pid);                             // Process preempted.

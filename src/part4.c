@@ -137,6 +137,30 @@ void showstats(queue *procqueue)
 
 
 /**
+ * @brief A process can terminate before it recieves SIGSTOP but after SIGALRM.
+ * 
+ * This function clears the terminated processes that somehow sliped pass the
+ * normal checking behavior. Very common for processes that have a runtime equal
+ * to the quantum size.
+ */
+void garbageCollector(queue *procqueue, pid_t exited_pid)
+{
+    pid_t *pid;            // A child's pid.
+    node *cnode = NULL;    // Node representing the currrent node.
+
+    infoMsg("Garbage collector activated.");
+    while ((pid = (pid_t *)inorder(procqueue, &cnode)) != NULL) {
+        if (exited_pid == *pid) {
+            terminateMsg(*pid);
+            rmqueue(procqueue, pid);                     // Process terminated.
+            free(pid);                                     // Free pid pointer.
+            return;
+        }
+    }
+}
+
+
+/**
  * @usuage ./part4 <filename>
  */
 int main (int argc, char *argv[]) 
@@ -205,6 +229,8 @@ int main (int argc, char *argv[])
         if (exited_pid > 0 && exited_pid == *pid) {
             rmqueue(procqueue, pid);          // Remove exited node from queue.
             free(pid);                                     // Free pid pointer.
+        } else if (exited_pid > 0 && exited_pid != *pid) {           // Tricky.
+            garbageCollector(procqueue, exited_pid);
         } else {
             kill(*pid, SIGSTOP);                         // Time slice expired.
         }
