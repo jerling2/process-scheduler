@@ -1,4 +1,4 @@
-# OS-MCP
+# (Process Scheduler) OS MCP
 
 ## Environment
 
